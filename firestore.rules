@@ -1,0 +1,144 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to get user document
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Check user role
+    function hasRole(role) {
+      return isAuthenticated() && getUserData().role == role;
+    }
+
+    function isSuperAdmin() {
+      return hasRole('SUPERADMIN');
+    }
+
+    function isAdmin() {
+      return isSuperAdmin() || hasRole('ADMINISTRADOR');
+    }
+
+    function isStaff() {
+      return isAdmin() || hasRole('RECEPCIÓN');
+    }
+
+    function isInstructor() {
+      return hasRole('INSTRUCTOR');
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin() || request.auth.uid == userId;
+    }
+
+    // Roles collection
+    match /roles/{roleId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin();
+    }
+
+    // Students
+    match /students/{studentId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Courses
+    match /courses/{courseId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Course Groups
+    match /courseGroups/{groupId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Enrollments (Matrículas)
+    match /enrollments/{enrollmentId} {
+      allow read: if isAuthenticated();
+      allow write: if isStaff();
+    }
+
+    // Payments
+    match /payments/{paymentId} {
+      allow read: if isStaff();
+      allow write: if isStaff();
+    }
+
+    // Attendance
+    match /attendance/{attendanceId} {
+      allow read: if isAuthenticated();
+      allow write: if isStaff() || isInstructor();
+    }
+
+    // Grades
+    match /grades/{gradeId} {
+      allow read: if isAuthenticated();
+      allow write: if isStaff() || isInstructor();
+    }
+
+    // Documents
+    match /documents/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isStaff();
+    }
+
+    // Communications
+    match /communications/{commId} {
+      allow read, write: if true;
+    }
+
+    // WhatsApp Contacts, Conversations, Messages
+    match /whatsappContacts/{contactId} {
+      allow read, write: if true;
+    }
+
+    match /whatsappConversations/{convId} {
+      allow read, write: if true;
+    }
+
+    match /whatsappMessages/{messageId} {
+      allow read, write: if true;
+    }
+
+    match /whatsappQuickReplies/{replyId} {
+      allow read, write: if true;
+    }
+
+    match /whatsappTemplates/{templateId} {
+      allow read, write: if true;
+    }
+
+    match /crmTags/{tagId} {
+      allow read, write: if true;
+    }
+
+    // Audit logs
+    match /auditLogs/{logId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if false; // Append-only audit logs
+    }
+
+    // Notifications
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // Settings
+    match /settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+  }
+}

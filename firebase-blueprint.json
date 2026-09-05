@@ -1,0 +1,204 @@
+{
+  "entities": {
+    "Student": {
+      "title": "Student",
+      "description": "Registered students and prospective applicants of Academia de Aduanas",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "identityNumber": { "type": "string" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "phone": { "type": "string" },
+        "whatsapp": { "type": "string" },
+        "whatsappId": { "type": "string" },
+        "email": { "type": "string" },
+        "status": {
+          "type": "string",
+          "enum": ["Activo", "Inactivo", "Graduado", "Suspendido", "Preinscrito", "Prospecto"]
+        },
+        "observations": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "firstName", "lastName", "status", "createdAt"]
+    },
+    "Course": {
+      "title": "Course",
+      "description": "Academic customs and foreign trade courses offered by the academy",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "status": { "type": "string", "enum": ["Activo", "Inactivo", "Borrador"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "code", "name", "price", "status"]
+    },
+    "Enrollment": {
+      "title": "Enrollment",
+      "description": "Student enrollment in specific courses and schedules",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "enrollmentNumber": { "type": "string" },
+        "studentId": { "type": "string" },
+        "courseId": { "type": "string" },
+        "status": { "type": "string", "enum": ["Inscrito", "Cursando", "Aprobado", "Reprobado", "Cancelado"] },
+        "totalAmount": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "studentId", "courseId", "status", "totalAmount"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "Tuition and fee payments issued to students with official receipt numbers",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "receiptNumber": { "type": "string" },
+        "studentId": { "type": "string" },
+        "total": { "type": "number" },
+        "method": { "type": "string" },
+        "status": { "type": "string", "enum": ["Pagado", "Anulado", "Pendiente"] },
+        "date": { "type": "string" }
+      },
+      "required": ["id", "receiptNumber", "studentId", "total", "status", "date"]
+    },
+    "WhatsAppContact": {
+      "title": "WhatsAppContact",
+      "description": "WhatsApp contact profile associated with phone number and optional student profile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "waId": { "type": "string" },
+        "profileName": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "status": { "type": "string", "enum": ["ESTUDIANTE", "PROSPECTO"] },
+        "lastMessageAt": { "type": "string" },
+        "lastMessagePreview": { "type": "string" },
+        "unreadCount": { "type": "number" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "phoneNumber", "waId", "profileName", "status", "lastMessageAt"]
+    },
+    "WhatsAppConversation": {
+      "title": "WhatsAppConversation",
+      "description": "Conversation thread between Academia and WhatsApp user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "contactId": { "type": "string" },
+        "studentId": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "profileName": { "type": "string" },
+        "lastMessageAt": { "type": "string" },
+        "lastMessagePreview": { "type": "string" },
+        "unreadCount": { "type": "number" },
+        "status": { "type": "string", "enum": ["open", "closed", "archived"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "contactId", "phoneNumber", "status", "lastMessageAt"]
+    },
+    "WhatsAppMessage": {
+      "title": "WhatsAppMessage",
+      "description": "Individual WhatsApp message sent or received via Meta Cloud API",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "whatsappMessageId": { "type": "string" },
+        "conversationId": { "type": "string" },
+        "contactId": { "type": "string" },
+        "studentId": { "type": "string" },
+        "direction": { "type": "string", "enum": ["incoming", "outgoing"] },
+        "type": {
+          "type": "string",
+          "enum": ["text", "image", "document", "audio", "video", "location", "sticker", "template", "interactive", "button", "unsupported"]
+        },
+        "text": { "type": "string" },
+        "mediaId": { "type": "string" },
+        "caption": { "type": "string" },
+        "filename": { "type": "string" },
+        "status": { "type": "string", "enum": ["received", "sent", "delivered", "read", "failed"] },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["id", "whatsappMessageId", "conversationId", "contactId", "direction", "type", "status", "timestamp"]
+    },
+    "CommunicationRecord": {
+      "title": "CommunicationRecord",
+      "description": "Log of multi-channel communications (WhatsApp, Call, Email, Meeting) with a student",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "type": { "type": "string" },
+        "message": { "type": "string" },
+        "date": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["id", "studentId", "type", "message", "date"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Immutable security log of operations performed in the system",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "role": { "type": "string" },
+        "action": { "type": "string" },
+        "targetModule": { "type": "string" },
+        "targetId": { "type": "string" },
+        "description": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["id", "action", "targetModule", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/students/{studentId}": {
+      "schema": "Student",
+      "description": "Students and prospect applicants"
+    },
+    "/courses/{courseId}": {
+      "schema": "Course",
+      "description": "Customs courses and credentials"
+    },
+    "/enrollments/{enrollmentId}": {
+      "schema": "Enrollment",
+      "description": "Student enrollment registrations"
+    },
+    "/payments/{paymentId}": {
+      "schema": "Payment",
+      "description": "Student payment receipts"
+    },
+    "/whatsappContacts/{contactId}": {
+      "schema": "WhatsAppContact",
+      "description": "WhatsApp contact profiles"
+    },
+    "/whatsappConversations/{convId}": {
+      "schema": "WhatsAppConversation",
+      "description": "WhatsApp chat conversations"
+    },
+    "/whatsappMessages/{messageId}": {
+      "schema": "WhatsAppMessage",
+      "description": "WhatsApp incoming and outgoing messages"
+    },
+    "/communications/{commId}": {
+      "schema": "CommunicationRecord",
+      "description": "Communications trail per student"
+    },
+    "/auditLogs/{logId}": {
+      "schema": "AuditLog",
+      "description": "System security audit records"
+    }
+  }
+}

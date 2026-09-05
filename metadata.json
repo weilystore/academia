@@ -1,0 +1,6 @@
+{
+  "name": "Academia de Aduanas",
+  "description": "Sistema privado de gestión académica y administrativa para la Academia de Aduanas.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
