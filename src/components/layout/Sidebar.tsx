@@ -117,18 +117,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
         }`}
       >
         {/* Brand Header */}
-        <div className="p-5 flex items-center justify-between border-b border-slate-800/80">
-          <div className="flex items-center gap-3 text-white">
-            <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white shadow-xs">
-              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
-              </svg>
+        <div className="p-4 sm:p-5 flex items-center justify-between border-b border-slate-800/80">
+          <div className="flex items-center gap-3 text-white min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-white p-1 flex items-center justify-center shadow-md shrink-0 border border-slate-700/60 overflow-hidden">
+              <img
+                src="/millennium-academy-logo.jpg"
+                alt="Millennium Academy"
+                className="w-full h-full object-contain"
+                referrerPolicy="no-referrer"
+              />
             </div>
             <div className="min-w-0">
-              <span className="font-bold tracking-tight text-sm uppercase block truncate text-white">
-                Academia de Aduanas
+              <span className="font-extrabold tracking-tight text-sm uppercase block truncate text-white">
+                Millennium Academy
               </span>
-              <span className="text-[10px] text-slate-400 font-medium tracking-wide uppercase block">
+              <span className="text-[10px] text-emerald-400 font-bold tracking-wider uppercase block truncate">
                 Gestión Académica
               </span>
             </div>
@@ -147,7 +150,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-white text-xs shrink-0 overflow-hidden border border-slate-600">
               {currentUser?.photoUrl ? (
-                <img src={currentUser.photoUrl} alt={currentUser.displayName} className="w-full h-full object-cover" />
+                <img
+                  src={currentUser.photoUrl}
+                  alt={currentUser.displayName}
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
               ) : (
                 (currentUser?.displayName || 'AD').slice(0, 2).toUpperCase()
               )}

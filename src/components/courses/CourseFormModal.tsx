@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, BookOpen } from 'lucide-react';
+import { X, Save, BookOpen, Trash2, AlertTriangle, Loader2 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
+import { useAuth } from '../../context/AuthContext';
 import { Course, CourseModality } from '../../types';
 
 interface CourseFormModalProps {
@@ -14,7 +15,11 @@ export const CourseFormModal: React.FC<CourseFormModalProps> = ({
   onClose,
   courseToEdit
 }) => {
-  const { addCourse, updateCourse, settings } = useData();
+  const { addCourse, updateCourse, deleteCourse, settings, groups } = useData();
+  const { currentUser, hasPermission } = useAuth();
+  const canDeleteCourse =
+    (currentUser?.role === 'SUPERADMIN' || currentUser?.role === 'ADMINISTRADOR') &&
+    hasPermission('courses', 'delete');
 
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
@@ -27,6 +32,9 @@ export const CourseFormModal: React.FC<CourseFormModalProps> = ({
   const [status, setStatus] = useState<Course['status']>('Inscripciones abiertas');
   const [syllabus, setSyllabus] = useState('');
   const [requirements, setRequirements] = useState('');
+
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (courseToEdit) {
@@ -245,23 +253,89 @@ export const CourseFormModal: React.FC<CourseFormModalProps> = ({
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-200 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-lg border border-slate-300 hover:bg-slate-100 font-medium text-slate-700"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="px-5 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold flex items-center gap-2 cursor-pointer"
-            >
-              <Save className="w-4 h-4" />
-              <span>Guardar Curso</span>
-            </button>
+          <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              {courseToEdit && canDeleteCourse && (
+                <button
+                  type="button"
+                  onClick={() => setConfirmDeleteOpen(true)}
+                  className="px-3.5 py-2 rounded-lg text-red-600 hover:text-red-700 hover:bg-red-50 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Eliminar Curso</span>
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 rounded-lg border border-slate-300 hover:bg-slate-100 font-medium text-slate-700 text-xs cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs flex items-center gap-2 cursor-pointer shadow-sm"
+              >
+                <Save className="w-4 h-4" />
+                <span>Guardar Curso</span>
+              </button>
+            </div>
           </div>
         </form>
+
+        {/* Modal delete confirmation overlay */}
+        {confirmDeleteOpen && courseToEdit && (
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 rounded-2xl">
+            <div className="bg-white rounded-xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 text-left">
+              <div className="w-9 h-9 rounded-lg bg-red-100 text-red-600 flex items-center justify-center mb-3">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <h4 className="text-sm font-bold text-slate-900">
+                ¿Eliminar el curso {courseToEdit.code}?
+              </h4>
+              <p className="text-xs text-slate-500 mt-1">
+                Se eliminará permanentemente "{courseToEdit.name}" del catálogo y los grupos asociados.
+              </p>
+              <div className="mt-4 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={() => setConfirmDeleteOpen(false)}
+                  className="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-100 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={async () => {
+                    setIsDeleting(true);
+                    await deleteCourse(courseToEdit.id);
+                    setIsDeleting(false);
+                    setConfirmDeleteOpen(false);
+                    onClose();
+                  }}
+                  className="px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Eliminando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Confirmar Eliminación</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

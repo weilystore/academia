@@ -110,7 +110,7 @@ export const DEFAULT_QUICK_REPLIES: WhatsAppQuickReply[] = [
     shortcut: '/saludo',
     title: 'Saludo Institucional y Presentación',
     category: 'General',
-    content: '¡Hola! Es un gusto saludarte. Te atiende el equipo de Admisiones de la Academia de Aduanas de Honduras. ¿En qué programa aduanero o de comercio exterior estás interesado en capacitarte?',
+    content: '¡Hola! Es un gusto saludarte. Te atiende el equipo de Admisiones de Millennium Academy. ¿En qué programa o curso estás interesado(a) en capacitarte?',
     tags: ['General', 'Saludo']
   },
   {
@@ -118,7 +118,7 @@ export const DEFAULT_QUICK_REPLIES: WhatsAppQuickReply[] = [
     shortcut: '/requisitos',
     title: 'Requisitos de Inscripción',
     category: 'Admisiones',
-    content: '📋 Los requisitos para matricularte en nuestros programas aduaneros son:\n1. Fotocopia o fotografía legible de DNI (identidad).\n2. Fotografía reciente para carnet institucional.\n3. Copia de título universitario o de secundaria.\n4. Comprobante de depósito o transferencia bancaria de la matrícula inicial.',
+    content: '📋 Los requisitos para matricularte en nuestros programas de Millennium Academy son:\n1. Fotocopia o fotografía legible de DNI (identidad).\n2. Fotografía reciente para carnet institucional.\n3. Copia de título universitario o de secundaria.\n4. Comprobante de depósito o transferencia bancaria de la matrícula inicial.',
     tags: ['Admisiones', 'Requisitos']
   },
   {
@@ -126,7 +126,7 @@ export const DEFAULT_QUICK_REPLIES: WhatsAppQuickReply[] = [
     shortcut: '/precios',
     title: 'Facilidades y Modalidad de Pago',
     category: 'Pagos',
-    content: '💰 Planes de inversión académica:\n- Diplomado en Legislación Aduanera: L. 6,500 (o 3 cuotas mensuales de L. 2,200).\n- Taller de Clasificación Arancelaria: L. 5,200 (o 2 cuotas de L. 2,650).\n- Despacho y Declaración DUCA: L. 4,500 al contado.\nTodos los aranceles incluyen diploma avalado, acceso al aula virtual y material oficial del SAC.',
+    content: '💰 Planes de inversión académica:\n- Diplomado Especializado: L. 6,500 (o 3 cuotas mensuales de L. 2,200).\n- Taller Práctico: L. 5,200 (o 2 cuotas de L. 2,650).\n- Curso Certificado: L. 4,500 al contado.\nTodos los aranceles incluyen diploma avalado, acceso al campus virtual y material oficial de estudio.',
     tags: ['Pagos', 'Precios']
   },
   {
@@ -134,7 +134,7 @@ export const DEFAULT_QUICK_REPLIES: WhatsAppQuickReply[] = [
     shortcut: '/cuentas',
     title: 'Cuentas Bancarias Oficiales',
     category: 'Pagos',
-    content: '🏦 Cuentas autorizadas a nombre de "Academia de Aduanas S. de R.L.":\n- Banco Atlántida: Cuenta de Cheques #1100-24958-3\n- BAC Credomatic: Cuenta de Ahorro #7401-9281-0\n- Ficohsa: Cuenta de Cheques #2000-8819-4\nFavor enviar la fotografía del comprobante de depósito por este mismo chat para registrar tu matrícula de inmediato.',
+    content: '🏦 Cuentas autorizadas a nombre de "Millennium Academy S. de R.L.":\n- Banco Atlántida: Cuenta de Cheques #1100-24958-3\n- BAC Credomatic: Cuenta de Ahorro #7401-9281-0\n- Ficohsa: Cuenta de Cheques #2000-8819-4\nFavor enviar la fotografía del comprobante de depósito por este mismo chat para registrar tu matrícula de inmediato.',
     tags: ['Pagos', 'Bancos']
   },
   {
@@ -221,7 +221,7 @@ export const DEFAULT_WHATSAPP_TEMPLATES: WhatsAppTemplate[] = [
     status: 'APPROVED',
     headerText: 'MATRÍCULA FORMALIZADA CON ÉXITO',
     bodyText: '¡Felicidades {{nombre}}! Tu matrícula en {{curso}} ha sido formalizada con el código {{codigo_matricula}}. Tu grupo asignado es {{grupo}}. Nos vemos en clase el {{fecha_inicio}}.',
-    footerText: 'Academia de Aduanas • Sede Oficial',
+    footerText: 'Millennium Academy • Sede Oficial',
     sampleVariables: {
       nombre: 'Juan Carlos Pérez',
       curso: 'Diplomado en Legislación Aduanera',

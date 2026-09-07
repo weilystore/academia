@@ -76,11 +76,12 @@ interface DataContextType {
   findDuplicateStudent: (data: { identityNumber?: string; phone?: string; whatsapp?: string; email?: string }, excludeId?: string) => Student | null;
   addStudent: (student: Omit<Student, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Student>;
   updateStudent: (id: string, updates: Partial<Student>) => Promise<void>;
-  deleteStudent: (id: string) => Promise<void>;
+  deleteStudent: (id: string) => Promise<{ success: boolean; error?: string }>;
 
   // Course operations
   addCourse: (course: Omit<Course, 'id' | 'createdAt' | 'updatedAt' | 'enrolledCount'>) => Promise<Course>;
   updateCourse: (id: string, updates: Partial<Course>) => Promise<void>;
+  deleteCourse: (id: string) => Promise<{ success: boolean; error?: string }>;
   addGroup: (group: Omit<CourseGroup, 'id' | 'createdAt' | 'enrolledCount'>) => Promise<CourseGroup>;
 
   // Enrollment operations
@@ -132,11 +133,11 @@ interface DataContextType {
 
 const DEFAULT_SETTINGS: SystemSettings = {
   id: 'general',
-  academyName: 'Academia de Aduanas',
-  institutionName: 'Academia de Aduanas',
-  legalName: 'Academia de Formación y Especialización Aduanera S. de R.L.',
+  academyName: 'Millennium Academy',
+  institutionName: 'Millennium Academy',
+  legalName: 'Millennium Academy S. de R.L.',
   phone: '+504 2239-5000',
-  email: 'info@academiadeaduanas.hn',
+  email: 'info@millenniumacademy.hn',
   address: 'Bulevar Morazán, Edificio Torre Alianza, Piso 6',
   city: 'Tegucigalpa, Honduras',
   currency: 'HNL',
@@ -151,22 +152,31 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 
 // Ensure complete clean slate for production: purge mock and demo data from localStorage once
 if (typeof window !== 'undefined') {
-  const PRODUCTION_CLEAN_SLATE_KEY = 'aduanas_clean_production_v10';
+  const PRODUCTION_CLEAN_SLATE_KEY = 'aduanas_clean_production_v30_clean_slate';
   if (!localStorage.getItem(PRODUCTION_CLEAN_SLATE_KEY)) {
-    localStorage.removeItem('aduanas_students');
-    localStorage.removeItem('aduanas_courses');
-    localStorage.removeItem('aduanas_groups');
-    localStorage.removeItem('aduanas_enrollments');
-    localStorage.removeItem('aduanas_payments');
-    localStorage.removeItem('aduanas_attendance');
-    localStorage.removeItem('aduanas_grades');
-    localStorage.removeItem('aduanas_documents');
-    localStorage.removeItem('aduanas_communications');
-    localStorage.removeItem('aduanas_wa_contacts');
-    localStorage.removeItem('aduanas_wa_conversations');
-    localStorage.removeItem('aduanas_wa_messages');
-    localStorage.removeItem('aduanas_audit_logs');
-    localStorage.removeItem('aduanas_notifications');
+    const keysToPurge = [
+      'aduanas_students',
+      'aduanas_courses',
+      'aduanas_groups',
+      'aduanas_enrollments',
+      'aduanas_payments',
+      'aduanas_attendance',
+      'aduanas_grades',
+      'aduanas_documents',
+      'aduanas_communications',
+      'aduanas_wa_contacts',
+      'aduanas_wa_conversations',
+      'aduanas_wa_messages',
+      'aduanas_audit_logs',
+      'aduanas_notifications',
+      'aduanas_system_users'
+    ];
+    keysToPurge.forEach(k => {
+      localStorage.removeItem(k);
+      if (k !== 'aduanas_audit_logs' && k !== 'aduanas_notifications' && k !== 'aduanas_system_users') {
+        localStorage.setItem(k, '[]');
+      }
+    });
     localStorage.setItem(PRODUCTION_CLEAN_SLATE_KEY, 'true');
   }
 }
@@ -286,7 +296,21 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [settings, setSettings] = useState<SystemSettings>(() => {
     const local = localStorage.getItem('aduanas_settings');
-    return local ? JSON.parse(local) : DEFAULT_SETTINGS;
+    if (local) {
+      try {
+        const parsed = JSON.parse(local);
+        if (parsed.academyName === 'Academia de Aduanas' || parsed.institutionName === 'Academia de Aduanas') {
+          parsed.academyName = 'Millennium Academy';
+          parsed.institutionName = 'Millennium Academy';
+          parsed.legalName = 'Millennium Academy S. de R.L.';
+          parsed.email = 'info@millenniumacademy.hn';
+        }
+        return { ...DEFAULT_SETTINGS, ...parsed };
+      } catch (e) {
+        console.warn('Error parsing cached settings:', e);
+      }
+    }
+    return DEFAULT_SETTINGS;
   });
 
   const [registeredWhatsAppInfo, setRegisteredWhatsAppInfo] = useState<{ activeNumber: string; verifiedName: string; phoneNumberId: string } | null>({
@@ -591,24 +615,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     settings
   ]);
 
-  // Firestore background bootstrap check
+  // Firestore connection check
   useEffect(() => {
-    const syncFirestore = async () => {
+    const checkFirestore = async () => {
       try {
-        const studentSnap = await getDocs(collection(db, 'students'));
-        if (studentSnap.empty && students.length > 0) {
-          console.log('[Firestore] Bootstrapping initial students collection...');
-          // Seed the initial students to Firestore
-          for (const st of students.slice(0, 3)) {
-            await setDoc(doc(db, 'students', st.id), st);
-          }
-        }
+        await getDocs(collection(db, 'students'));
       } catch (e) {
-        // Firestore may be in offline or rule check mode, gracefully handled
-        console.info('[Firestore] Using reliable reactive state layer:', e);
+        console.info('[Firestore] Initialized:', e);
       }
     };
-    syncFirestore();
+    checkFirestore();
   }, []);
 
   // Helper to add audit logs
@@ -710,15 +726,44 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {}
   };
 
-  // Delete Student
-  const deleteStudent = async (id: string): Promise<void> => {
+  // Delete Student (Restricted to Superadmin & Administradores)
+  const deleteStudent = async (id: string): Promise<{ success: boolean; error?: string }> => {
     const target = students.find(s => s.id === id);
+    if (!target) {
+      return { success: false, error: 'Estudiante no encontrado en el padrón.' };
+    }
+
+    // Remove from students list
     setStudents(prev => prev.filter(s => s.id !== id));
-    addAuditLog('Eliminación de Estudiante', 'Estudiantes', id, `Eliminó registro de ${target ? target.firstName : id}`);
+
+    // Clean up associated student records
+    const studentEnrollments = enrollments.filter(e => e.studentId === id);
+    if (studentEnrollments.length > 0) {
+      setEnrollments(prev => prev.filter(e => e.studentId !== id));
+    }
+    setPayments(prev => prev.filter(p => p.studentId !== id));
+    setAttendance(prev => prev.filter(a => a.studentId !== id));
+    setGrades(prev => prev.filter(g => g.studentId !== id));
+    setDocuments(prev => prev.filter(d => d.studentId !== id));
+    setCommunications(prev => prev.filter(c => c.studentId !== id));
+
+    addAuditLog(
+      'Eliminación de Estudiante',
+      'Estudiantes',
+      id,
+      `Eliminó el expediente de "${target.firstName} ${target.lastName}" (DNI: ${target.identityNumber})`
+    );
 
     try {
       await deleteDoc(doc(db, 'students', id));
-    } catch (e) {}
+      for (const enr of studentEnrollments) {
+        await deleteDoc(doc(db, 'enrollments', enr.id)).catch(() => {});
+      }
+    } catch (e) {
+      console.warn('[Firestore] Error deleting student from cloud:', e);
+    }
+
+    return { success: true };
   };
 
   // Add Course
@@ -753,6 +798,42 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await setDoc(doc(db, 'courses', id), { ...updates, updatedAt: new Date().toISOString() }, { merge: true });
     } catch (e) {}
+  };
+
+  // Delete Course (Only SUPERADMIN & ADMINISTRADOR)
+  const deleteCourse = async (id: string): Promise<{ success: boolean; error?: string }> => {
+    const courseToDelete = courses.find(c => c.id === id);
+    if (!courseToDelete) {
+      return { success: false, error: 'El curso solicitado no existe en el catálogo.' };
+    }
+
+    // Remove from courses list
+    setCourses(prev => prev.filter(c => c.id !== id));
+
+    // Remove associated groups
+    const tiedGroups = groups.filter(g => g.courseId === id);
+    if (tiedGroups.length > 0) {
+      setGroups(prev => prev.filter(g => g.courseId !== id));
+    }
+
+    addAuditLog(
+      'Eliminación de Curso',
+      'Cursos',
+      id,
+      `Eliminó el curso "${courseToDelete.name}" (${courseToDelete.code}) y ${tiedGroups.length} grupo(s) asociados`
+    );
+
+    // Remove from Firestore
+    try {
+      await deleteDoc(doc(db, 'courses', id));
+      for (const g of tiedGroups) {
+        await deleteDoc(doc(db, 'courseGroups', g.id)).catch(() => {});
+      }
+    } catch (e) {
+      console.warn('[Firestore] Error deleting course:', e);
+    }
+
+    return { success: true };
   };
 
   // Add Group
@@ -1075,7 +1156,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             type: 'WhatsApp',
             message: text,
             userId: currentUser?.uid || 'system',
-            userName: currentUser?.displayName || 'Academia de Aduanas',
+            userName: currentUser?.displayName || 'Millennium Academy',
             status: 'Enviado',
             createdAt: now
           };
@@ -1579,18 +1660,27 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setNotifications(INITIAL_NOTIFICATIONS);
 
     // Clear localStorage
-    localStorage.removeItem('aduanas_students');
-    localStorage.removeItem('aduanas_courses');
-    localStorage.removeItem('aduanas_groups');
-    localStorage.removeItem('aduanas_enrollments');
-    localStorage.removeItem('aduanas_payments');
-    localStorage.removeItem('aduanas_attendance');
-    localStorage.removeItem('aduanas_grades');
-    localStorage.removeItem('aduanas_documents');
-    localStorage.removeItem('aduanas_communications');
-    localStorage.removeItem('aduanas_wa_contacts');
-    localStorage.removeItem('aduanas_wa_conversations');
-    localStorage.removeItem('aduanas_wa_messages');
+    const keys = [
+      'aduanas_students',
+      'aduanas_courses',
+      'aduanas_groups',
+      'aduanas_enrollments',
+      'aduanas_payments',
+      'aduanas_attendance',
+      'aduanas_grades',
+      'aduanas_documents',
+      'aduanas_communications',
+      'aduanas_wa_contacts',
+      'aduanas_wa_conversations',
+      'aduanas_wa_messages',
+      'aduanas_system_users'
+    ];
+    keys.forEach(k => {
+      localStorage.removeItem(k);
+      if (k !== 'aduanas_system_users') {
+        localStorage.setItem(k, '[]');
+      }
+    });
   };
 
   const resetDemoData = () => {
@@ -1640,6 +1730,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         deleteStudent,
         addCourse,
         updateCourse,
+        deleteCourse,
         addGroup,
         createEnrollment,
         updateEnrollmentStatus,

@@ -26,46 +26,6 @@ export const DEMO_USERS: UserProfile[] = [
     active: true,
     createdAt: '2025-01-01T08:00:00Z',
     photoUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80'
-  },
-  {
-    uid: 'user-superadmin-01',
-    email: 'director@academiadeaduanas.hn',
-    displayName: 'Lic. Roberto Mendoza',
-    role: 'SUPERADMIN',
-    phone: '+504 9988-1122',
-    active: true,
-    createdAt: '2025-01-10T08:00:00Z',
-    photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
-  },
-  {
-    uid: 'user-admin-02',
-    email: 'admin@academiadeaduanas.hn',
-    displayName: 'Abog. Carmen Valladares',
-    role: 'ADMINISTRADOR',
-    phone: '+504 9876-5432',
-    active: true,
-    createdAt: '2025-02-01T09:30:00Z',
-    photoUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80'
-  },
-  {
-    uid: 'user-recepcion-03',
-    email: 'recepcion@academiadeaduanas.hn',
-    displayName: 'Daniela Meza',
-    role: 'RECEPCIÓN',
-    phone: '+504 9455-6677',
-    active: true,
-    createdAt: '2025-03-15T10:00:00Z',
-    photoUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80'
-  },
-  {
-    uid: 'user-instructor-04',
-    email: 'instructor.alvarado@academiadeaduanas.hn',
-    displayName: 'Ing. Carlos Alvarado (Agente Aduanero)',
-    role: 'INSTRUCTOR',
-    phone: '+504 9122-3344',
-    active: true,
-    createdAt: '2025-02-10T14:00:00Z',
-    photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80'
   }
 ];
 
@@ -102,7 +62,7 @@ export const INITIAL_AUDIT_LOGS: AuditLog[] = [
     role: 'SUPERADMIN',
     action: 'Sistema en Producción',
     targetModule: 'Sistema',
-    description: 'Sistema configurado en limpio sin datos de relleno. Listo para registrar la información real de la Academia de Aduanas.',
+    description: 'Sistema configurado en limpio sin datos de relleno. Listo para registrar la información real de Millennium Academy.',
     timestamp: new Date().toISOString()
   }
 ];

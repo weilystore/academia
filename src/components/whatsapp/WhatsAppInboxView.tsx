@@ -470,13 +470,13 @@ export const WhatsAppInboxView: React.FC<WhatsAppInboxViewProps> = ({
     let text = '';
 
     if (templateName === 'Recordatorio de Pago') {
-      text = `Estimado(a) ${studentName}, le saludamos cordialmente de la Academia de Aduanas para recordarle que su cuota mensual está próxima a vencer. Su saldo pendiente es de L ${pendingBalance.toLocaleString()}. Puede realizar su transferencia a nuestras cuentas oficiales. ¡Saludos!`;
+      text = `Estimado(a) ${studentName}, le saludamos cordialmente de Millennium Academy para recordarle que su cuota mensual está próxima a vencer. Su saldo pendiente es de L ${pendingBalance.toLocaleString()}. Puede realizar su transferencia a nuestras cuentas oficiales. ¡Saludos!`;
     } else if (templateName === 'Bienvenida a Curso') {
-      text = `¡Bienvenido(a) a la Academia de Aduanas, ${studentName}! Su matrícula ha sido confirmada con éxito. Las clases inician en los horarios asignados. Cualquier consulta estamos a su entera disposición.`;
+      text = `¡Bienvenido(a) a Millennium Academy, ${studentName}! Su matrícula ha sido confirmada con éxito. Las clases inician en los horarios asignados. Cualquier consulta estamos a su entera disposición.`;
     } else if (templateName === 'Aviso de Asistencia') {
-      text = `Estimado(a) ${studentName}, de la Dirección Académica le informamos que registramos una inasistencia a su clase de aduanas. Recuerde que el porcentaje mínimo de asistencia para aprobación es del 80%.`;
+      text = `Estimado(a) ${studentName}, de la Dirección Académica de Millennium Academy le informamos que registramos una inasistencia a su clase programada. Recuerde que el porcentaje mínimo de asistencia para aprobación es del 80%.`;
     } else if (templateName === 'Envío de Calificaciones') {
-      text = `Estimado(a) ${studentName}, sus calificaciones del módulo aduanero han sido procesadas en el sistema. Puede consultar su expediente o solicitar su constancia oficial en recepción.`;
+      text = `Estimado(a) ${studentName}, sus calificaciones del módulo académico han sido procesadas en el sistema de Millennium Academy. Puede consultar su expediente o solicitar su constancia oficial en recepción.`;
     }
 
     setMessageText(text);
@@ -1698,7 +1698,7 @@ export const WhatsAppInboxView: React.FC<WhatsAppInboxViewProps> = ({
                 <div>
                   <p className="font-bold text-amber-900 text-xs">Contacto Prospecto</p>
                   <p className="text-[11px] text-amber-800 mt-0.5">
-                    Identificado automáticamente como prospecto en la base de datos de Academia de Aduanas.
+                    Identificado automáticamente como prospecto en la base de datos de Millennium Academy.
                   </p>
                 </div>
 
@@ -2141,7 +2141,7 @@ export const WhatsAppInboxView: React.FC<WhatsAppInboxViewProps> = ({
                 <textarea
                   required
                   rows={3}
-                  placeholder="Hola, le saludamos desde Academia de Aduanas. ¿En qué podemos servirle hoy?"
+                  placeholder="Hola, le saludamos desde Millennium Academy. ¿En qué podemos servirle hoy?"
                   value={newChatMessage}
                   onChange={e => setNewChatMessage(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"

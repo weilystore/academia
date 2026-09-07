@@ -31,7 +31,7 @@ export const AIAssistantView: React.FC = () => {
     {
       id: 'welcome-1',
       sender: 'assistant',
-      text: `¡Hola ${currentUser?.name}! Soy el Asistente Inteligente de la **Academia de Aduanas**. Puedo ayudarte a analizar métricas de cobro, sugerir textos institucionales para WhatsApp, calcular porcentajes de asistencia o resumir el estado de tus cursos y estudiantes. ¿En qué te puedo apoyar hoy?`,
+      text: `¡Hola ${currentUser?.name}! Soy el Asistente Inteligente de **Millennium Academy**. Puedo ayudarte a analizar métricas de cobro, sugerir textos institucionales para WhatsApp, calcular porcentajes de asistencia o resumir el estado de tus cursos y estudiantes. ¿En qué te puedo apoyar hoy?`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
@@ -101,7 +101,7 @@ export const AIAssistantView: React.FC = () => {
         const total = payments.reduce((sum, p) => sum + p.total, 0);
         fallbackText = `El total acumulado en cobros y recibos oficiales asciende a **L ${total.toLocaleString()}** distribuidos en **${payments.length} transacciones registradas**. Los métodos principales son Transferencias Bancarias (BAC/Ficohsa) y Caja Chica.`;
       } else if (lower.includes('whatsapp') || lower.includes('mensaje')) {
-        fallbackText = `Aquí tienes una plantilla recomendada:\n\n*"Estimado estudiante de la Academia de Aduanas, le informamos que el examen del módulo de Legislación Aduanera se realizará este próximo sábado. Favor confirmar su asistencia y presentar su carnet al ingresar. ¡Muchos éxitos!"*`;
+        fallbackText = `Aquí tienes una plantilla recomendada:\n\n*"Estimado estudiante de Millennium Academy, le informamos que el examen del módulo programado se realizará este próximo sábado. Favor confirmar su asistencia y presentar su carnet al ingresar. ¡Muchos éxitos!"*`;
       } else if (lower.includes('curso') || lower.includes('programa')) {
         fallbackText = `La Academia ofrece actualmente **${courses.length} cursos especializados**: ${courses.map(c => c.name).join('; ')}. Todos cuentan con grupos sabatinos y vespertinos asignados.`;
       } else {

@@ -15,7 +15,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 
 export const LoginView: React.FC = () => {
-  const { loginWithEmail, systemUsers } = useAuth();
+  const { loginWithEmail } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -40,12 +40,6 @@ export const LoginView: React.FC = () => {
     }
   };
 
-  const handleQuickSelect = (userEmail: string) => {
-    setEmail(userEmail);
-    setPassword('admin123');
-    setError(null);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 flex flex-col justify-center items-center p-4 sm:p-6 text-slate-100">
       {/* Background ambient lighting */}
@@ -54,12 +48,17 @@ export const LoginView: React.FC = () => {
       <div className="w-full max-w-md relative z-10 space-y-6">
         {/* Brand Header */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-amber-500 shadow-xl border border-white/20">
-            <GraduationCap className="w-9 h-9 text-white" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-white shadow-2xl border border-slate-700/50 p-2 overflow-hidden">
+            <img
+              src="/millennium-academy-logo.jpg"
+              alt="Millennium Academy"
+              className="w-full h-full object-contain"
+              referrerPolicy="no-referrer"
+            />
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-              Academia de Aduanas
+              Millennium Academy
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 font-medium mt-1">
               Sistema Integrado de Gestión Académica y Administrativa
@@ -141,62 +140,6 @@ export const LoginView: React.FC = () => {
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
-
-          {/* Institutional Fast Access Badges */}
-          <div className="pt-4 border-t border-slate-800/80 space-y-2.5">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-              Cuentas Institucionales Rápidas:
-            </span>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => handleQuickSelect('wilmerosales13@gmail.com')}
-                className="p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-left transition-colors cursor-pointer group"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-white group-hover:text-amber-400">Wilmer Rosales</span>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">SUPERADMIN</span>
-                </div>
-                <span className="text-[10px] text-slate-400 block truncate">wilmerosales13@gmail.com</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickSelect('admin@academiadeaduanas.hn')}
-                className="p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-left transition-colors cursor-pointer group"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-white group-hover:text-blue-400">Carmen V.</span>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 font-bold">ADMIN</span>
-                </div>
-                <span className="text-[10px] text-slate-400 block truncate">admin@academiadeaduanas.hn</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickSelect('recepcion@academiadeaduanas.hn')}
-                className="p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-left transition-colors cursor-pointer group"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-white group-hover:text-emerald-400">Daniela M.</span>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">RECEPCIÓN</span>
-                </div>
-                <span className="text-[10px] text-slate-400 block truncate">recepcion@...hn</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickSelect('instructor.alvarado@academiadeaduanas.hn')}
-                className="p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-left transition-colors cursor-pointer group"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-white group-hover:text-amber-400">Carlos A.</span>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">DOCENTE</span>
-                </div>
-                <span className="text-[10px] text-slate-400 block truncate">instructor...@...hn</span>
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Footer info */}
@@ -206,7 +149,7 @@ export const LoginView: React.FC = () => {
             <span>Encriptación TLS &bull; Base de Datos Segura &bull; Meta WhatsApp Cloud</span>
           </p>
           <p className="text-[11px]">
-            &copy; 2026 Academia de Aduanas. Todos los derechos reservados.
+            &copy; 2026 Millennium Academy. Todos los derechos reservados.
           </p>
         </div>
       </div>

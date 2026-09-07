@@ -10,6 +10,8 @@ export interface UserProfile {
   active: boolean;
   createdAt: string;
   lastLogin?: string;
+  password?: string;
+  passwordUpdatedAt?: string;
 }
 
 export type StudentStatus = 'Prospecto' | 'Preinscrito' | 'Activo' | 'Inactivo' | 'Graduado' | 'Retirado';

@@ -175,7 +175,7 @@ export const WhatsAppLightboxModal: React.FC<WhatsAppLightboxModalProps> = ({
 
       {/* Footer Info */}
       <div className="h-10 px-6 bg-slate-900/60 border-t border-slate-800/80 text-[11px] text-slate-400 flex items-center justify-between shrink-0">
-        <span>Academia de Aduanas &bull; Visor de Documentos y Fotografía Oficial</span>
+        <span>Millennium Academy &bull; Visor de Documentos y Fotografía Oficial</span>
         <span>Usa los controles superiores o las teclas +, - y R para inspeccionar detalles</span>
       </div>
     </div>

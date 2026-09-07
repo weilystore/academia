@@ -1,6 +1,6 @@
 {
-  "name": "Academia de Aduanas",
-  "description": "Sistema privado de gestión académica y administrativa para la Academia de Aduanas.",
+  "name": "Millennium Academy",
+  "description": "Sistema privado de gestión académica y administrativa para Millennium Academy.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

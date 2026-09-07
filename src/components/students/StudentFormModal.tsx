@@ -5,9 +5,12 @@ import {
   UserCheck,
   CheckCircle,
   Save,
-  ArrowRight
+  ArrowRight,
+  Trash2,
+  Loader2
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
+import { useAuth } from '../../context/AuthContext';
 import { Student, StudentStatus } from '../../types';
 
 interface StudentFormModalProps {
@@ -23,7 +26,16 @@ export const StudentFormModal: React.FC<StudentFormModalProps> = ({
   studentToEdit,
   onOpenExistingProfile
 }) => {
-  const { addStudent, updateStudent, findDuplicateStudent } = useData();
+  const { addStudent, updateStudent, deleteStudent, findDuplicateStudent } = useData();
+  const { currentUser, hasPermission } = useAuth();
+
+  // Student deletion strictly for Superadmin and Administrador
+  const canDeleteStudent =
+    (currentUser?.role === 'SUPERADMIN' || currentUser?.role === 'ADMINISTRADOR') &&
+    hasPermission('students', 'delete');
+
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [formData, setFormData] = useState({
     identityNumber: '',
@@ -172,7 +184,7 @@ export const StudentFormModal: React.FC<StudentFormModalProps> = ({
               {studentToEdit ? 'Editar Datos del Estudiante' : 'Registrar Nuevo Estudiante'}
             </h3>
             <p className="text-xs text-amber-400 font-medium mt-0.5">
-              Academia de Aduanas &bull; Ficha de Admisión
+              Millennium Academy &bull; Ficha de Admisión
             </p>
           </div>
           <button
@@ -502,6 +514,17 @@ export const StudentFormModal: React.FC<StudentFormModalProps> = ({
 
           {/* Form Actions */}
           <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
+            {studentToEdit && canDeleteStudent && (
+              <button
+                type="button"
+                onClick={() => setIsConfirmingDelete(true)}
+                className="mr-auto px-3 py-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold border border-rose-200 flex items-center gap-1.5 transition-colors cursor-pointer text-xs"
+              >
+                <Trash2 className="w-4 h-4 text-rose-600" />
+                <span>Eliminar Estudiante</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={onClose}
@@ -521,6 +544,83 @@ export const StudentFormModal: React.FC<StudentFormModalProps> = ({
           </div>
         </form>
       </div>
+
+      {/* Delete Confirmation Modal Overlay */}
+      {studentToEdit && isConfirmingDelete && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center text-red-600 shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800">
+                    ACCESO ADMINISTRATIVO
+                  </span>
+                  <span className="text-slate-400 text-xs">Superadmin / Administrador</span>
+                </div>
+                <h3 className="text-base font-bold text-slate-900 leading-tight">
+                  ¿Eliminar registro de {studentToEdit.firstName} {studentToEdit.lastName}?
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Esta acción eliminará de forma permanente al alumno de la base de datos y dará de baja su expediente.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="font-mono font-bold text-slate-900">DNI: {studentToEdit.identityNumber || 'S/N'}</span>
+                <span className="text-slate-500">{studentToEdit.status}</span>
+              </div>
+              <p className="text-slate-600 font-medium">
+                {studentToEdit.firstName} {studentToEdit.lastName}
+              </p>
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setIsConfirmingDelete(false)}
+                className="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 font-medium text-slate-700 text-xs cursor-pointer transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={async () => {
+                  setIsDeleting(true);
+                  try {
+                    await deleteStudent(studentToEdit.id);
+                    setIsConfirmingDelete(false);
+                    onClose();
+                  } catch (e) {
+                    console.error(e);
+                  } finally {
+                    setIsDeleting(false);
+                  }
+                }}
+                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm shadow-red-500/20 cursor-pointer transition-all disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Eliminando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Sí, eliminar estudiante</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

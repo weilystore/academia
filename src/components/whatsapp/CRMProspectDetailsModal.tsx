@@ -86,7 +86,7 @@ export const CRMProspectDetailsModal: React.FC<CRMProspectDetailsModalProps> = (
 
   const currentStageConfig = CRM_STAGE_CONFIG[selectedStage] || CRM_STAGE_CONFIG.nuevo;
 
-  // Standard Academia de Aduanas courses & catalog
+  // Standard Millennium Academy courses & catalog
   const standardPrograms = [
     { name: 'Diplomado en Legislación Aduanera y Comercio Exterior', label: 'Diplomado en Legislación Aduanera y Comercio Exterior (L. 6,500)' },
     { name: 'Diplomado en Legislación Aduanera', label: 'Diplomado en Legislación Aduanera (L. 6,500)' },

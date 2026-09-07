@@ -32,10 +32,12 @@ service cloud.firestore {
       return hasRole('INSTRUCTOR');
     }
 
-    // Users collection
+    // Users collection (Strict SUPERADMIN management for roles, creations and deletions)
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow write: if isSuperAdmin() || request.auth.uid == userId;
+      allow create: if isSuperAdmin();
+      allow update: if isSuperAdmin() || (request.auth.uid == userId && request.resource.data.role == resource.data.role);
+      allow delete: if isSuperAdmin();
     }
 
     // Roles collection
@@ -52,14 +54,12 @@ service cloud.firestore {
 
     // Courses
     match /courses/{courseId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
+      allow read, write: if true;
     }
 
     // Course Groups
     match /courseGroups/{groupId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
+      allow read, write: if true;
     }
 
     // Enrollments (Matrículas)
@@ -142,3 +142,4 @@ service cloud.firestore {
     }
   }
 }
+

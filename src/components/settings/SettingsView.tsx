@@ -69,7 +69,7 @@ export const SettingsView: React.FC = () => {
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(backup, null, 2));
     const dlAnchorElem = document.createElement('a');
     dlAnchorElem.setAttribute('href', dataStr);
-    dlAnchorElem.setAttribute('download', `academia_aduanas_backup_${new Date().toISOString().slice(0, 10)}.json`);
+    dlAnchorElem.setAttribute('download', `millennium_academy_backup_${new Date().toISOString().slice(0, 10)}.json`);
     dlAnchorElem.click();
   };
 
@@ -244,6 +244,36 @@ export const SettingsView: React.FC = () => {
                   Configura la variable <code>DATABASE_URL</code> en Render para activar la base de datos relacional permanente y compartida en la nube.
                 </p>
               )}
+            </div>
+          </div>
+
+          {/* Institutional Logo Box */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
+                <Building className="w-4 h-4 text-blue-600" />
+                <span>Logo Oficial de la Academia</span>
+              </div>
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                Activo
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3.5 p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+              <div className="w-14 h-14 rounded-xl bg-white p-1 flex items-center justify-center border border-slate-200 shadow-xs shrink-0 overflow-hidden">
+                <img
+                  src="/millennium-academy-logo.jpg"
+                  alt="Millennium Academy Logo"
+                  className="w-full h-full object-contain"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              <div className="min-w-0">
+                <h4 className="font-extrabold text-xs text-slate-900 truncate">Millennium Academy</h4>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Escudo oficial con birrete académico y corona de laureles. Visible en el menú lateral, encabezados y pantalla de inicio.
+                </p>
+              </div>
             </div>
           </div>
 
