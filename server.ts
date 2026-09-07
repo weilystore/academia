@@ -58,6 +58,8 @@ import {
   maskIdentifier,
   getMetaConfig
 } from './server/services/whatsapp/whatsappApi';
+import { initPostgresDatabase } from './src/server/db';
+import { getDatabaseStatus, getFullDataset, syncDataset } from './src/server/dbController';
 import { runWhatsAppTestSuite } from './server/services/whatsapp/whatsappTestSuite';
 import { normalizePhoneNumber } from './server/services/whatsapp/phoneUtils';
 import { whatsappStore } from './server/services/whatsapp/whatsappStore';
@@ -85,6 +87,11 @@ app.get('/api/health', (req: Request, res: Response) => {
     uptime: process.uptime()
   });
 });
+
+// 1b. PostgreSQL Database Persistence & Status (Render Cloud DB)
+app.get('/api/db/status', getDatabaseStatus);
+app.get('/api/db/dataset', getFullDataset);
+app.post('/api/db/sync', syncDataset);
 
 // 2. WhatsApp Meta Webhook Verification (GET)
 // Meta calls this when configuring or verifying the Webhook callback URL in Meta Developers App
@@ -576,6 +583,13 @@ ${JSON.stringify(context || {}, null, 2)}
 // VITE MIDDLEWARE / PRODUCTION STATIC FILES
 // ----------------------------------------------------
 async function start() {
+  // Initialize PostgreSQL schema if DATABASE_URL is provided (e.g. Render)
+  try {
+    await initPostgresDatabase();
+  } catch (dbErr: any) {
+    console.warn('[PostgreSQL Startup Notice]:', dbErr.message);
+  }
+
   if (process.env.NODE_ENV !== 'production') {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({

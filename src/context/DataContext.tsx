@@ -514,6 +514,83 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setWhatsappMessages(prev => prev.filter(m => m.conversationId !== conversationId));
   };
 
+  // Live PostgreSQL Cloud Persistence synchronization
+  useEffect(() => {
+    let isMounted = true;
+    const loadFromPostgres = async () => {
+      try {
+        const res = await fetch('/api/db/dataset');
+        if (!res.ok) return;
+        const result = await res.json();
+        if (result.success && result.hasPostgres && result.data && isMounted) {
+          const d = result.data;
+          if (Array.isArray(d.students) && d.students.length > 0) setStudents(d.students);
+          if (Array.isArray(d.courses) && d.courses.length > 0) setCourses(d.courses);
+          if (Array.isArray(d.groups) && d.groups.length > 0) setGroups(d.groups);
+          if (Array.isArray(d.enrollments) && d.enrollments.length > 0) setEnrollments(d.enrollments);
+          if (Array.isArray(d.payments) && d.payments.length > 0) setPayments(d.payments);
+          if (Array.isArray(d.attendance) && d.attendance.length > 0) setAttendance(d.attendance);
+          if (Array.isArray(d.grades) && d.grades.length > 0) setGrades(d.grades);
+          if (Array.isArray(d.documents) && d.documents.length > 0) setDocuments(d.documents);
+          if (Array.isArray(d.communications) && d.communications.length > 0) setCommunications(d.communications);
+          if (Array.isArray(d.whatsappContacts) && d.whatsappContacts.length > 0) setWhatsappContacts(d.whatsappContacts);
+          if (Array.isArray(d.whatsappConversations) && d.whatsappConversations.length > 0) setWhatsappConversations(d.whatsappConversations);
+          if (Array.isArray(d.whatsappMessages) && d.whatsappMessages.length > 0) setWhatsappMessages(d.whatsappMessages);
+          if (Array.isArray(d.auditLogs) && d.auditLogs.length > 0) setAuditLogs(d.auditLogs);
+          if (d.settings) setSettings(d.settings);
+          console.log('[PostgreSQL]: Datos cargados y sincronizados desde PostgreSQL en Render.');
+        }
+      } catch (err) {
+        console.warn('[PostgreSQL Fetch Notice]:', err);
+      }
+    };
+    loadFromPostgres();
+    return () => { isMounted = false; };
+  }, []);
+
+  // Sync state changes to PostgreSQL debounced
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetch('/api/db/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          students,
+          courses,
+          groups,
+          enrollments,
+          payments,
+          attendance,
+          grades,
+          documents,
+          communications,
+          whatsappContacts,
+          whatsappConversations,
+          whatsappMessages,
+          auditLogs,
+          settings
+        })
+      }).catch(() => {});
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [
+    students,
+    courses,
+    groups,
+    enrollments,
+    payments,
+    attendance,
+    grades,
+    documents,
+    communications,
+    whatsappContacts,
+    whatsappConversations,
+    whatsappMessages,
+    auditLogs,
+    settings
+  ]);
+
   // Firestore background bootstrap check
   useEffect(() => {
     const syncFirestore = async () => {

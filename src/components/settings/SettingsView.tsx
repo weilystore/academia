@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Settings as SettingsIcon,
   Building,
@@ -10,7 +10,9 @@ import {
   Key,
   ShieldAlert,
   Download,
-  Upload
+  Upload,
+  Server,
+  HardDrive
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 
@@ -26,6 +28,22 @@ export const SettingsView: React.FC = () => {
   const [address, setAddress] = useState(settings.address);
   const [whatsappApiStatus, setWhatsappApiStatus] = useState('Conectado (Cloud API v20.0)');
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // PostgreSQL Status on Render
+  const [dbStatus, setDbStatus] = useState<{
+    connected: boolean;
+    provider?: string;
+    databaseName?: string;
+    stats?: { students: number; enrollments: number; payments: number };
+    message?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch('/api/db/status')
+      .then(res => res.json())
+      .then(data => setDbStatus(data))
+      .catch(() => setDbStatus({ connected: false, message: 'Modo local sin servidor' }));
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -181,6 +199,54 @@ export const SettingsView: React.FC = () => {
 
         {/* Integration and Backup Panels */}
         <div className="space-y-6 text-xs">
+          {/* PostgreSQL Cloud Database Card (Render) */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
+                <Server className="w-4 h-4 text-indigo-600" />
+                <span>Base de Datos PostgreSQL (Render)</span>
+              </div>
+              {dbStatus?.connected ? (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Conectada
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                  Local / Pendiente
+                </span>
+              )}
+            </div>
+
+            <div className={`p-3 rounded-xl border space-y-1.5 ${dbStatus?.connected ? 'bg-indigo-50/70 border-indigo-200 text-indigo-900' : 'bg-slate-50 border-slate-200 text-slate-600'}`}>
+              <div className="flex items-center justify-between">
+                <span className="font-semibold">Servidor BD:</span>
+                <span className="font-mono font-bold text-[11px]">{dbStatus?.provider || 'Modo Local'}</span>
+              </div>
+              {dbStatus?.connected && dbStatus.stats && (
+                <div className="pt-2 border-t border-indigo-200/60 grid grid-cols-3 gap-1 text-center">
+                  <div className="bg-white/80 p-1.5 rounded-lg border border-indigo-100">
+                    <div className="font-bold text-slate-900 text-xs">{dbStatus.stats.students}</div>
+                    <div className="text-[9px] text-slate-500">Estudiantes</div>
+                  </div>
+                  <div className="bg-white/80 p-1.5 rounded-lg border border-indigo-100">
+                    <div className="font-bold text-slate-900 text-xs">{dbStatus.stats.enrollments}</div>
+                    <div className="text-[9px] text-slate-500">Matrículas</div>
+                  </div>
+                  <div className="bg-white/80 p-1.5 rounded-lg border border-indigo-100">
+                    <div className="font-bold text-slate-900 text-xs">{dbStatus.stats.payments}</div>
+                    <div className="text-[9px] text-slate-500">Pagos</div>
+                  </div>
+                </div>
+              )}
+              {!dbStatus?.connected && (
+                <p className="text-[11px] text-slate-500 leading-relaxed pt-1">
+                  Configura la variable <code>DATABASE_URL</code> en Render para activar la base de datos relacional permanente y compartida en la nube.
+                </p>
+              )}
+            </div>
+          </div>
+
           {/* WhatsApp Cloud API Box */}
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-3">
             <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
