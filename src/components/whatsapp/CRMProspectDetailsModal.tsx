@@ -16,10 +16,12 @@ import {
   MessageSquare,
   Clock,
   Send,
-  AlertCircle
+  AlertCircle,
+  Trash2
 } from 'lucide-react';
 import { WhatsAppContact, CRMStage, Student } from '../../types';
 import { useData } from '../../context/DataContext';
+import { useAuth } from '../../context/AuthContext';
 import { CRM_STAGE_CONFIG } from '../../data/crmData';
 
 interface CRMProspectDetailsModalProps {
@@ -30,6 +32,7 @@ interface CRMProspectDetailsModalProps {
   onOpenQuickPayment?: (student: Student) => void;
   onOpenChat?: (contactId: string) => void;
   onUpdated?: (updatedContact: WhatsAppContact) => void;
+  onDelete?: (contact: WhatsAppContact) => void;
 }
 
 export const CRMProspectDetailsModal: React.FC<CRMProspectDetailsModalProps> = ({
@@ -39,8 +42,12 @@ export const CRMProspectDetailsModal: React.FC<CRMProspectDetailsModalProps> = (
   onOpenQuickEnrollment,
   onOpenQuickPayment,
   onOpenChat,
-  onUpdated
+  onUpdated,
+  onDelete
 }) => {
+  const { currentUser } = useAuth();
+  const canDelete = currentUser?.role === 'SUPERADMIN' || currentUser?.role === 'ADMINISTRADOR';
+
   const {
     courses,
     crmTags,
@@ -583,11 +590,24 @@ export const CRMProspectDetailsModal: React.FC<CRMProspectDetailsModalProps> = (
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 bg-slate-100 border-t border-slate-200 flex justify-end">
+        <div className="px-6 py-3 bg-slate-100 border-t border-slate-200 flex items-center justify-between">
+          <div>
+            {canDelete && onDelete && (
+              <button
+                type="button"
+                onClick={() => onDelete(contact)}
+                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                title="Eliminar este prospecto del embudo CRM"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                <span>Eliminar Prospecto</span>
+              </button>
+            )}
+          </div>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold transition-colors"
+            className="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
           >
             Cerrar Ficha
           </button>

@@ -398,6 +398,15 @@ app.delete('/api/whatsapp/conversations/:id', (req: Request, res: Response) => {
   res.json({ success: true });
 });
 
+// 4e2. Delete Contact / CRM Prospect
+app.delete(['/api/whatsapp/contacts/:id', '/api/whatsapp/contact/:id'], (req: Request, res: Response) => {
+  const { id } = req.params;
+  if (id) {
+    whatsappStore.deleteContact(id);
+  }
+  res.json({ success: true, message: 'Prospecto eliminado correctamente del CRM' });
+});
+
 // 4f. Clear All Conversations (Fresh Production Live Mode)
 app.post('/api/whatsapp/clear-all', (req: Request, res: Response) => {
   whatsappStore.clearAll();

@@ -17,10 +17,12 @@ import {
   CheckCircle2,
   TrendingUp,
   Filter,
-  AlertTriangle
+  AlertTriangle,
+  Trash2
 } from 'lucide-react';
 import { WhatsAppContact, CRMStage, Student } from '../../types';
 import { useData } from '../../context/DataContext';
+import { useAuth } from '../../context/AuthContext';
 import { CRM_STAGE_CONFIG } from '../../data/crmData';
 import { CRMProspectDetailsModal } from './CRMProspectDetailsModal';
 
@@ -35,11 +37,15 @@ export const CRMProspectsKanban: React.FC<CRMProspectsKanbanProps> = ({
   onOpenQuickEnrollment,
   onOpenQuickPayment
 }) => {
+  const { currentUser } = useAuth();
+  const canDelete = currentUser?.role === 'SUPERADMIN' || currentUser?.role === 'ADMINISTRADOR';
+
   const {
     whatsappContacts,
     courses,
     students,
-    updateContactStage
+    updateContactStage,
+    deleteCRMContact
   } = useData();
 
   const [search, setSearch] = useState('');
@@ -49,6 +55,11 @@ export const CRMProspectsKanban: React.FC<CRMProspectsKanbanProps> = ({
   // Selected contact for detail modal
   const [selectedContact, setSelectedContact] = useState<WhatsAppContact | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+  // Deletion modal state (Restricted to SUPERADMIN & ADMINISTRADOR)
+  const [prospectToDelete, setProspectToDelete] = useState<WhatsAppContact | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteSuccessMessage, setDeleteSuccessMessage] = useState<string | null>(null);
 
   const activeSelectedContact = useMemo(() => {
     if (!selectedContact) return null;
@@ -103,6 +114,14 @@ export const CRMProspectsKanban: React.FC<CRMProspectsKanbanProps> = ({
 
   return (
     <div className="space-y-5">
+      {/* Feedback banner */}
+      {deleteSuccessMessage && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-semibold text-emerald-800 flex items-center gap-2 animate-in fade-in duration-200">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span>{deleteSuccessMessage}</span>
+        </div>
+      )}
+
       {/* Top Commercial Pipeline KPI Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs flex items-center gap-3">
@@ -319,18 +338,35 @@ export const CRMProspectsKanban: React.FC<CRMProspectsKanbanProps> = ({
 
                         {/* Quick Action Footer inside card */}
                         <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 text-[11px]">
-                          {/* Chat button */}
-                          <button
-                            type="button"
-                            onClick={e => {
-                              e.stopPropagation();
-                              onOpenChat(contact.id);
-                            }}
-                            className="p-1 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
-                            title="Abrir Chat de WhatsApp"
-                          >
-                            <MessageSquare className="w-3.5 h-3.5" />
-                          </button>
+                          {/* Chat and Delete actions */}
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={e => {
+                                e.stopPropagation();
+                                onOpenChat(contact.id);
+                              }}
+                              className="p-1 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors cursor-pointer"
+                              title="Abrir Chat de WhatsApp"
+                            >
+                              <MessageSquare className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* Delete Prospect - Restricted to SUPERADMIN and ADMINISTRADOR */}
+                            {canDelete && (
+                              <button
+                                type="button"
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  setProspectToDelete(contact);
+                                }}
+                                className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors cursor-pointer"
+                                title="Eliminar prospecto del embudo CRM (Admin)"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
 
                           {/* Quick stage advance selector */}
                           <div className="flex items-center gap-1">
@@ -368,7 +404,72 @@ export const CRMProspectsKanban: React.FC<CRMProspectsKanbanProps> = ({
         onOpenQuickPayment={onOpenQuickPayment}
         onOpenChat={onOpenChat}
         onUpdated={(updatedContact) => setSelectedContact(updatedContact)}
+        onDelete={(contact) => {
+          setIsDetailModalOpen(false);
+          setProspectToDelete(contact);
+        }}
       />
+
+      {/* Modal de Confirmación de Eliminación - Exclusivo SUPERADMIN y ADMINISTRADOR */}
+      {prospectToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div className="flex items-start gap-3.5">
+              <div className="p-3 bg-rose-100 text-rose-600 rounded-xl shrink-0">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-bold text-slate-900">
+                  ¿Eliminar prospecto del embudo CRM?
+                </h3>
+                <p className="text-xs text-slate-600 mt-1">
+                  Estás a punto de eliminar a <strong className="text-slate-900">{prospectToDelete.name}</strong> ({prospectToDelete.phone}).
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-1.5">
+              <div className="flex items-center gap-1.5 font-bold text-amber-800">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>Permiso restringido a Superadmin y Administrador</span>
+              </div>
+              <p className="text-[11px] text-amber-800/90 leading-relaxed">
+                Esta acción removerá definitivamente la tarjeta del embudo comercial, sus notas internas y el historial de seguimiento comercial asignado.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setProspectToDelete(null)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={async () => {
+                  setIsDeleting(true);
+                  try {
+                    await deleteCRMContact(prospectToDelete.id);
+                    setDeleteSuccessMessage(`Prospecto "${prospectToDelete.name}" eliminado correctamente.`);
+                    setTimeout(() => setDeleteSuccessMessage(null), 3500);
+                  } finally {
+                    setIsDeleting(false);
+                    setProspectToDelete(null);
+                  }
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors flex items-center gap-2 cursor-pointer shadow-sm disabled:opacity-50"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>{isDeleting ? 'Eliminando...' : 'Sí, Eliminar del Embudo'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

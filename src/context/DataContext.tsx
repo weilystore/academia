@@ -115,6 +115,7 @@ interface DataContextType {
   whatsappTemplates: WhatsAppTemplate[];
   updateContactCRM: (contactId: string, updates: Partial<WhatsAppContact>) => Promise<void>;
   updateContactStage: (contactId: string, newStage: CRMStage) => Promise<void>;
+  deleteCRMContact: (contactId: string) => Promise<boolean>;
   addCRMNote: (contactId: string, text: string) => Promise<CRMNote>;
   addQuickReply: (qr: Omit<WhatsAppQuickReply, 'id'>) => Promise<WhatsAppQuickReply>;
   updateQuickReply: (id: string, updates: Partial<WhatsAppQuickReply>) => Promise<void>;
@@ -536,6 +537,42 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await fetch(`/api/whatsapp/conversations/${conversationId}`, { method: 'DELETE' });
     setWhatsappConversations(prev => prev.filter(c => c.id !== conversationId));
     setWhatsappMessages(prev => prev.filter(m => m.conversationId !== conversationId));
+  };
+
+  const deleteCRMContact = async (contactId: string): Promise<boolean> => {
+    const cleanId = contactId.replace(/\D/g, '');
+    const contact = whatsappContacts.find(c =>
+      c.id === contactId ||
+      c.studentId === contactId ||
+      (cleanId && cleanId.length >= 8 && c.whatsappId === cleanId) ||
+      (cleanId && cleanId.length >= 8 && c.phone.replace(/\D/g, '').endsWith(cleanId.slice(-8)))
+    );
+
+    const targetId = contact ? contact.id : contactId;
+    const contactName = contact ? contact.name : 'Prospecto';
+
+    // Remove from local contacts state
+    setWhatsappContacts(prev => prev.filter(c => c.id !== targetId && c.id !== contactId));
+
+    // Remove associated conversations & messages
+    setWhatsappConversations(prev => prev.filter(c => c.contactId !== targetId && c.id !== targetId));
+    setWhatsappMessages(prev => prev.filter(m => m.contactId !== targetId));
+
+    // Backend call
+    try {
+      await fetch(`/api/whatsapp/contact/${encodeURIComponent(targetId)}`, { method: 'DELETE' });
+    } catch (err) {
+      console.warn('[deleteCRMContact] Error calling server delete:', err);
+    }
+
+    addAuditLog(
+      'Prospecto CRM Eliminado',
+      'WhatsApp CRM',
+      targetId,
+      `Eliminado prospecto ${contactName} (${contact?.phone || contactId}) del embudo comercial.`
+    );
+
+    return true;
   };
 
   // Live PostgreSQL Cloud Persistence synchronization
@@ -1749,6 +1786,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         convertProspectToStudent,
         updateContactCRM,
         updateContactStage,
+        deleteCRMContact,
         addCRMNote,
         addQuickReply,
         updateQuickReply,

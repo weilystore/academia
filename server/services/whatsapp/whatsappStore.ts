@@ -384,6 +384,36 @@ class WhatsAppStore {
   }
 
   /**
+   * Delete a contact and its related conversation/messages from CRM
+   */
+  public deleteContact(contactId: string): void {
+    const cleanId = contactId.replace(/\D/g, '');
+    const contact = this.contacts.find(c => 
+      c.id === contactId || 
+      c.studentId === contactId || 
+      (cleanId && cleanId.length >= 8 && c.whatsappId === cleanId) || 
+      (cleanId && cleanId.length >= 8 && c.phone.replace(/\D/g, '').endsWith(cleanId.slice(-8)))
+    );
+    const targetId = contact ? contact.id : contactId;
+
+    this.contacts = this.contacts.filter(c => c.id !== targetId);
+
+    // Also remove matching conversations and messages
+    const conv = this.conversations.find(c =>
+      c.contactId === targetId ||
+      c.id === targetId ||
+      (contact && c.phone && contact.phone && c.phone.replace(/\D/g, '') === contact.phone.replace(/\D/g, ''))
+    );
+
+    if (conv) {
+      this.conversations = this.conversations.filter(c => c.id !== conv.id);
+      this.messages = this.messages.filter(m => m.conversationId !== conv.id);
+    }
+
+    this.persist();
+  }
+
+  /**
    * Update contact CRM data (stage, status, tags, notes, advisor, etc.)
    */
   public updateContact(contactId: string, updates: Partial<StoredWhatsAppContact>): StoredWhatsAppContact | null {
