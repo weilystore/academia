@@ -112,7 +112,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       <aside
         id="app-sidebar"
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-[#1E293B] text-slate-100 flex flex-col border-r border-slate-800/80 transition-transform duration-200 ease-in-out lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#1E293B] text-slate-100 flex flex-col border-r border-slate-800/80 transition-transform duration-200 ease-in-out shrink-0 lg:static lg:inset-auto lg:translate-x-0 lg:h-screen ${
           isSidebarVisible ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

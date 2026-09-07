@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   MessageSquare,
   Send,
@@ -10,6 +10,7 @@ import {
   CreditCard,
   Plus,
   Phone,
+  ArrowLeft,
   Sparkles,
   Bot,
   UserPlus,
@@ -88,6 +89,17 @@ export const WhatsAppInboxView: React.FC<WhatsAppInboxViewProps> = ({
   const [activeTab, setActiveTab] = useState<'inbox' | 'kanban' | 'quick_replies' | 'templates' | 'stats'>('inbox');
 
   const [activeConvId, setActiveConvId] = useState<string>(whatsappConversations[0]?.id || '');
+  // Mobile view state: 'list' (shows conversations list) or 'chat' (shows active thread full screen)
+  const [mobileScreen, setMobileScreen] = useState<'list' | 'chat'>('chat');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // On desktop (>=1024px) right panel is open by default; on mobile it behaves as an overlay drawer
+  const [isRightPanelOpen, setIsRightPanelOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 1024;
+    }
+    return true;
+  });
   const [filterType, setFilterType] = useState<'all' | 'ESTUDIANTE' | 'PROSPECTO'>('all');
   const [search, setSearch] = useState('');
   const [messageText, setMessageText] = useState('');
@@ -409,6 +421,13 @@ export const WhatsAppInboxView: React.FC<WhatsAppInboxViewProps> = ({
   // Messages of active conversation
   const currentMessages = whatsappMessages.filter(m => m.conversationId === activeConv?.id);
 
+  // Auto-scroll to latest message on selection or new message
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [currentMessages.length, activeConvId, mobileScreen]);
+
   // Student details if linked
   const studentEnrollments = activeStudent ? enrollments.filter(e => e.studentId === activeStudent.id) : [];
   const studentPayments = activeStudent ? payments.filter(p => p.studentId === activeStudent.id) : [];
@@ -604,6 +623,7 @@ export const WhatsAppInboxView: React.FC<WhatsAppInboxViewProps> = ({
       setActiveConvId(conv.id);
     }
     setActiveTab('inbox');
+    setMobileScreen('chat');
   };
 
   const handleInsertQuickReply = (content: string) => {
@@ -734,7 +754,7 @@ export const WhatsAppInboxView: React.FC<WhatsAppInboxViewProps> = ({
   };
 
   return (
-    <div className="space-y-4 pb-12">
+    <div className="space-y-3 sm:space-y-4 pb-4 sm:pb-8">
       {/* Header Banner */}
       <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
@@ -965,9 +985,9 @@ export const WhatsAppInboxView: React.FC<WhatsAppInboxViewProps> = ({
 
       {/* Tab 0: Bandeja de Chats (Default 3-Column Interface) */}
       {activeTab === 'inbox' && (
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden flex flex-col lg:flex-row h-[750px]">
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden flex flex-col lg:flex-row h-[calc(100dvh-175px)] min-h-[520px] max-h-[850px] lg:h-[750px] relative">
         {/* Left Column: Conversations List */}
-        <div className="w-full lg:w-80 border-r border-slate-200 flex flex-col shrink-0 bg-slate-50/50">
+        <div className={`${mobileScreen === 'list' ? 'flex' : 'hidden'} lg:flex w-full lg:w-64 xl:w-72 2xl:w-80 border-r border-slate-200 flex-col shrink-0 bg-slate-50/50 h-full`}>
           {/* Quick Chat Bar & Filter Options */}
           <div className="p-3 border-b border-slate-200 space-y-2">
             <button
@@ -1056,7 +1076,10 @@ export const WhatsAppInboxView: React.FC<WhatsAppInboxViewProps> = ({
                 return (
                   <div
                     key={conv.id}
-                    onClick={() => setActiveConvId(conv.id)}
+                    onClick={() => {
+                      setActiveConvId(conv.id);
+                      setMobileScreen('chat');
+                    }}
                     className={`p-3 flex items-start gap-2.5 cursor-pointer transition-colors group relative ${
                       isSelected ? 'bg-amber-50/80 border-l-4 border-amber-500' : 'hover:bg-slate-100/70'
                     }`}
@@ -1131,9 +1154,17 @@ export const WhatsAppInboxView: React.FC<WhatsAppInboxViewProps> = ({
         </div>
 
         {/* Middle Column: Active Chat Thread */}
-        <div className="flex-1 flex flex-col border-r border-slate-200 bg-[#f8fafc]">
+        <div className={`${mobileScreen === 'chat' ? 'flex' : 'hidden'} lg:flex flex-1 flex-col border-r border-slate-200 bg-[#f8fafc] min-w-0 h-full overflow-hidden`}>
           {!activeConv ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-slate-50/50">
+            <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-8 text-center bg-slate-50/50">
+              <button
+                type="button"
+                onClick={() => setMobileScreen('list')}
+                className="lg:hidden mb-4 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4 text-slate-500" />
+                <span>Ver Lista de Conversaciones</span>
+              </button>
               <div className="w-16 h-16 rounded-2xl bg-emerald-100 border border-emerald-200 text-emerald-600 flex items-center justify-center mb-4 shadow-xs">
                 <PhoneCall className="w-8 h-8" />
               </div>
@@ -1178,25 +1209,38 @@ export const WhatsAppInboxView: React.FC<WhatsAppInboxViewProps> = ({
           ) : (
             <>
               {/* Chat Header */}
-              <div className="p-3.5 bg-white border-b border-slate-200 flex items-center justify-between shadow-2xs">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
+              <div className="p-2 sm:p-3 bg-white border-b border-slate-200 flex items-center justify-between gap-2 shadow-2xs shrink-0">
+                <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+                  {/* Mobile Back Button to return to Chat List */}
+                  <button
+                    type="button"
+                    onClick={() => setMobileScreen('list')}
+                    className="lg:hidden p-1.5 -ml-1 text-slate-700 hover:text-slate-900 rounded-lg hover:bg-slate-100 flex items-center gap-1 text-xs font-bold shrink-0 cursor-pointer"
+                    title="Volver a lista de chats"
+                  >
+                    <ArrowLeft className="w-4 h-4 text-slate-700" />
+                    <span className="hidden xs:inline text-[11px]">Chats</span>
+                  </button>
+
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs shrink-0">
                     {activeConv.name.charAt(0)}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-xs text-slate-900">{activeConv.name}</h3>
-                      <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <h3 className="font-bold text-xs text-slate-900 truncate max-w-[120px] xs:max-w-[150px] sm:max-w-[220px]" title={activeConv.name}>
+                        {activeConv.name}
+                      </h3>
+                      <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded shrink-0">
                         {activeContact?.status || 'PROSPECTO'}
                       </span>
                       {activeConv.isDemo ? (
-                        <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-500 border border-slate-200">
+                        <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-500 border border-slate-200 shrink-0">
                           DEMO
                         </span>
                       ) : (
-                        <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+                        <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1 shrink-0">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                          WHATSAPP REAL
+                          REAL
                         </span>
                       )}
                     </div>
@@ -1205,18 +1249,18 @@ export const WhatsAppInboxView: React.FC<WhatsAppInboxViewProps> = ({
                 </div>
 
                 {/* CRM Controls & Templates in Chat Header */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 shrink-0">
                   {/* Stage Dropdown Selector */}
                   <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase hidden sm:inline">Etapa:</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase hidden md:inline">Etapa:</span>
                     <select
                       value={activeContact?.crmStage || (activeContact?.status === 'ESTUDIANTE' ? 'matriculado' : 'nuevo')}
                       onChange={e => handleUpdateActiveContactStage(e.target.value as CRMStage)}
                       className="text-[11px] font-bold bg-transparent border-0 cursor-pointer text-slate-800 focus:outline-hidden"
                     >
-                      <option value="nuevo">Nuevo Prospecto</option>
+                      <option value="nuevo">Nuevo</option>
                       <option value="interesado">Interesado</option>
-                      <option value="seguimiento">En Seguimiento</option>
+                      <option value="seguimiento">Seguimiento</option>
                       <option value="pago_pendiente">Pago Pendiente</option>
                       <option value="matriculado">Matriculado</option>
                       <option value="descartado">Descartado</option>
@@ -1227,30 +1271,28 @@ export const WhatsAppInboxView: React.FC<WhatsAppInboxViewProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsCRMModalOpen(true)}
-                    className="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-[11px] font-semibold flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors"
+                    className="px-2 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-[11px] font-semibold flex items-center gap-1 shadow-xs cursor-pointer transition-colors"
                     title="Abrir Ficha Comercial Completa del Prospecto"
                   >
-                    <FileText className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Ficha CRM</span>
+                    <FileText className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span className="hidden sm:inline">Ficha CRM</span>
                   </button>
 
-                  {/* Quick Template Picker */}
-                  <div className="hidden xl:flex items-center gap-1 text-[11px] pl-2 border-l border-slate-200">
-                    <button
-                      type="button"
-                      onClick={() => handleApplyTemplate('Recordatorio de Pago')}
-                      className="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-medium cursor-pointer"
-                    >
-                      Cobro
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleApplyTemplate('Bienvenida a Curso')}
-                      className="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-medium cursor-pointer"
-                    >
-                      Bienvenida
-                    </button>
-                  </div>
+                  {/* Toggle Right CRM Details Panel */}
+                  <button
+                    type="button"
+                    onClick={() => setIsRightPanelOpen(!isRightPanelOpen)}
+                    className={`px-2 sm:px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer ${
+                      isRightPanelOpen
+                        ? 'bg-amber-50 border-amber-300 text-amber-900'
+                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
+                    title={isRightPanelOpen ? 'Ocultar panel derecho de detalles' : 'Mostrar ficha de detalles del contacto'}
+                  >
+                    <User className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span className="hidden lg:inline">{isRightPanelOpen ? 'Ocultar Panel' : 'Ver Panel'}</span>
+                    <span className="lg:hidden text-[11px]">Ficha</span>
+                  </button>
 
                   {/* Delete Conversation Button */}
                   <button
@@ -1265,7 +1307,7 @@ export const WhatsAppInboxView: React.FC<WhatsAppInboxViewProps> = ({
               </div>
 
           {/* Messages Timeline */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-3">
+          <div className="flex-1 p-3 sm:p-4 overflow-y-auto space-y-3 min-h-0">
             {currentMessages.length === 0 ? (
               <div className="py-16 text-center text-slate-400 text-xs">
                 <MessageSquare className="w-8 h-8 mx-auto text-slate-300 mb-2" />
@@ -1354,6 +1396,7 @@ export const WhatsAppInboxView: React.FC<WhatsAppInboxViewProps> = ({
                 );
               })
             )}
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Autocomplete Floating Bar when typing "/" */}
@@ -1386,8 +1429,8 @@ export const WhatsAppInboxView: React.FC<WhatsAppInboxViewProps> = ({
             </div>
           )}
 
-          {/* Message Composer */}
-          <form onSubmit={handleSend} className="p-3 bg-white border-t border-slate-200 flex items-center gap-2 relative">
+          {/* Message Composer - Pinned Sticky to bottom */}
+          <form onSubmit={handleSend} className="p-2 sm:p-3 bg-white border-t border-slate-200 flex items-center gap-1.5 sm:gap-2 relative shrink-0 sticky bottom-0 z-10">
             {/* Quick Reply Popover Button */}
             <div className="relative">
               <button
@@ -1477,15 +1520,15 @@ export const WhatsAppInboxView: React.FC<WhatsAppInboxViewProps> = ({
               value={messageText}
               onChange={e => setMessageText(e.target.value)}
               placeholder={`Escribir a ${activeConv?.name || 'contacto'} (escribe '/' para respuestas rápidas)...`}
-              className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-hidden"
+              className="flex-1 min-w-0 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-hidden"
             />
             <button
               type="submit"
               disabled={isSending || !messageText.trim()}
-              className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs"
+              className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs shrink-0"
             >
               <Send className="w-3.5 h-3.5" />
-              <span>{isSending ? 'Enviando...' : 'Enviar'}</span>
+              <span className="hidden xs:inline">{isSending ? 'Enviando...' : 'Enviar'}</span>
             </button>
           </form>
           </>
@@ -1493,185 +1536,204 @@ export const WhatsAppInboxView: React.FC<WhatsAppInboxViewProps> = ({
         </div>
 
         {/* Right Column: Contact & Student Profile Overview */}
-        <div className="w-full lg:w-72 border-l border-slate-200 bg-white p-4 overflow-y-auto space-y-4 shrink-0 text-xs">
-          <div className="text-center pb-3 border-b border-slate-100">
-            <div className="w-16 h-16 rounded-full bg-slate-900 text-amber-400 text-lg font-bold flex items-center justify-center mx-auto mb-2 border-2 border-amber-400 shadow-xs">
-              {activeConv?.name.charAt(0)}
-            </div>
-            <h4 className="font-bold text-sm text-slate-900">{activeConv?.name}</h4>
-            <p className="text-[11px] text-slate-500 font-mono mt-0.5">{activeConv?.phone}</p>
-            <span className={`inline-block mt-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-              activeContact?.status === 'ESTUDIANTE' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
-            }`}>
-              {activeContact?.status || 'PROSPECTO'}
-            </span>
-          </div>
+        {isRightPanelOpen && (
+          <>
+            {/* Mobile Drawer Backdrop */}
+            <div
+              className="lg:hidden fixed inset-0 bg-slate-900/60 z-40 backdrop-blur-2xs animate-in fade-in duration-200"
+              onClick={() => setIsRightPanelOpen(false)}
+            />
 
-          {/* CRM Lead Commercial Summary Card */}
-          <div className="p-3 bg-amber-50/60 rounded-xl border border-amber-200/80 space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800">Ficha Comercial CRM</span>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                CRM_STAGE_CONFIG[activeContact?.crmStage || (activeContact?.status === 'ESTUDIANTE' ? 'matriculado' : 'nuevo')]?.bg
-              } ${
-                CRM_STAGE_CONFIG[activeContact?.crmStage || (activeContact?.status === 'ESTUDIANTE' ? 'matriculado' : 'nuevo')]?.text
+            {/* Sidebar Container (Slide-over drawer on mobile, static 3rd column on desktop) */}
+            <div className="fixed inset-y-0 right-0 z-50 w-[85vw] max-w-sm bg-white shadow-2xl p-4 overflow-y-auto space-y-3.5 text-xs animate-in slide-in-from-right duration-200 lg:static lg:w-64 xl:w-72 2xl:w-80 lg:border-l lg:border-slate-200 lg:shadow-none lg:z-auto lg:p-3 sm:lg:p-4 lg:animate-none shrink-0 h-full">
+            <div className="text-center pb-3 border-b border-slate-100 relative">
+              <button
+                type="button"
+                onClick={() => setIsRightPanelOpen(false)}
+                className="absolute right-0 top-0 p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                title="Ocultar ficha lateral"
+              >
+                ✕
+              </button>
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-900 text-amber-400 text-base sm:text-lg font-bold flex items-center justify-center mx-auto mb-2 border-2 border-amber-400 shadow-xs">
+                {activeConv?.name.charAt(0)}
+              </div>
+              <h4 className="font-bold text-sm text-slate-900 truncate px-2" title={activeConv?.name}>{activeConv?.name}</h4>
+              <p className="text-[11px] text-slate-500 font-mono mt-0.5">{activeConv?.phone}</p>
+              <span className={`inline-block mt-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                activeContact?.status === 'ESTUDIANTE' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
               }`}>
-                {CRM_STAGE_CONFIG[activeContact?.crmStage || (activeContact?.status === 'ESTUDIANTE' ? 'matriculado' : 'nuevo')]?.label}
+                {activeContact?.status || 'PROSPECTO'}
               </span>
             </div>
 
-            <div className="space-y-1.5 text-[11px]">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">Curso de Interés:</span>
-                <span className="font-semibold text-slate-800 text-right truncate max-w-[130px]">
-                  {activeContact?.courseInterest || activeStudent?.currentCourse || 'No especificado'}
+            {/* CRM Lead Commercial Summary Card */}
+            <div className="p-3 bg-amber-50/60 rounded-xl border border-amber-200/80 space-y-2.5">
+              <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 shrink-0">Ficha CRM</span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
+                  CRM_STAGE_CONFIG[activeContact?.crmStage || (activeContact?.status === 'ESTUDIANTE' ? 'matriculado' : 'nuevo')]?.bg
+                } ${
+                  CRM_STAGE_CONFIG[activeContact?.crmStage || (activeContact?.status === 'ESTUDIANTE' ? 'matriculado' : 'nuevo')]?.text
+                }`}>
+                  {CRM_STAGE_CONFIG[activeContact?.crmStage || (activeContact?.status === 'ESTUDIANTE' ? 'matriculado' : 'nuevo')]?.label}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">Valor Estimado:</span>
-                <span className="font-extrabold text-amber-700">
-                  L {(activeContact?.estimatedValue || 5000).toLocaleString()}
-                </span>
+
+              <div className="space-y-1.5 text-[11px]">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-slate-500 shrink-0">Curso de Interés:</span>
+                  <span className="font-semibold text-slate-800 text-right truncate min-w-0" title={activeContact?.courseInterest || activeStudent?.currentCourse || 'No especificado'}>
+                    {activeContact?.courseInterest || activeStudent?.currentCourse || 'No especificado'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-slate-500 shrink-0">Valor Estimado:</span>
+                  <span className="font-extrabold text-amber-700 shrink-0">
+                    L {(activeContact?.estimatedValue || 5000).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-slate-500 shrink-0">Asesor Asignado:</span>
+                  <span className="font-medium text-slate-700 text-right truncate min-w-0" title={activeContact?.assignedAdvisorName || 'Academia Aduanas'}>
+                    {activeContact?.assignedAdvisorName || 'Academia Aduanas'}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">Asesor Asignado:</span>
-                <span className="font-medium text-slate-700">
-                  {activeContact?.assignedAdvisorName || 'Academia Aduanas'}
-                </span>
-              </div>
+
+              {/* Tags Chips */}
+              {activeContact?.tags && activeContact.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 pt-1 border-t border-amber-200/50">
+                  {activeContact.tags.map(t => (
+                    <span key={t} className="px-1.5 py-0.5 rounded bg-white text-slate-700 text-[9px] font-medium border border-amber-200">
+                      #{t}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setIsCRMModalOpen(true)}
+                className="w-full py-1.5 rounded-lg bg-white hover:bg-amber-100/50 text-amber-900 border border-amber-300 font-bold text-[11px] flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs transition-colors"
+              >
+                <FileText className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <span className="truncate">Gestionar Ficha y Notas CRM</span>
+              </button>
             </div>
 
-            {/* Tags Chips */}
-            {activeContact?.tags && activeContact.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 pt-1 border-t border-amber-200/50">
-                {activeContact.tags.map(t => (
-                  <span key={t} className="px-1.5 py-0.5 rounded bg-white text-slate-700 text-[9px] font-medium border border-amber-200">
-                    #{t}
-                  </span>
-                ))}
+            {/* Success Banner if just converted */}
+            {conversionSuccessMsg && (
+              <div className="p-3 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-900 text-xs flex items-start gap-2 shadow-xs animate-in fade-in">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-[11px] text-emerald-950">¡Convertido a Estudiante!</p>
+                  <p className="text-[11px] text-emerald-800 leading-tight mt-0.5">{conversionSuccessMsg}</p>
+                </div>
               </div>
             )}
 
-            <button
-              type="button"
-              onClick={() => setIsCRMModalOpen(true)}
-              className="w-full py-1.5 rounded-lg bg-white hover:bg-amber-100/50 text-amber-900 border border-amber-300 font-bold text-[11px] flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs transition-colors"
-            >
-              <FileText className="w-3.5 h-3.5 text-amber-600" />
-              <span>Gestionar Ficha y Notas CRM</span>
-            </button>
-          </div>
-
-          {/* Success Banner if just converted */}
-          {conversionSuccessMsg && (
-            <div className="p-3 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-900 text-xs flex items-start gap-2 shadow-xs animate-in fade-in">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-[11px] text-emerald-950">¡Convertido a Estudiante!</p>
-                <p className="text-[11px] text-emerald-800 leading-tight mt-0.5">{conversionSuccessMsg}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Conditional: If Student Exists */}
-          {activeStudent ? (
-            <div className="space-y-3">
-              <div className="p-3 bg-emerald-50/60 rounded-xl border border-emerald-200 space-y-2">
-                <div className="flex items-center justify-between pb-1.5 border-b border-emerald-100">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-800 flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                    Estudiante Activo
-                  </span>
-                  <button
-                    onClick={() => {
-                      setProspectToConvert(activeStudent);
-                      setIsConvertModalOpen(true);
-                    }}
-                    className="text-[10px] font-bold text-amber-800 hover:text-amber-900 underline cursor-pointer"
-                  >
-                    Editar Ficha
-                  </button>
+            {/* Conditional: If Student Exists */}
+            {activeStudent ? (
+              <div className="space-y-3">
+                <div className="p-3 bg-emerald-50/60 rounded-xl border border-emerald-200 space-y-2">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-emerald-100">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-800 flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                      Estudiante Activo
+                    </span>
+                    <button
+                      onClick={() => {
+                        setProspectToConvert(activeStudent);
+                        setIsConvertModalOpen(true);
+                      }}
+                      className="text-[10px] font-bold text-amber-800 hover:text-amber-900 underline cursor-pointer"
+                    >
+                      Editar Ficha
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 text-[11px]">
+                    <span className="text-slate-500 shrink-0">DNI:</span>
+                    <span className="font-mono font-bold text-slate-800 truncate min-w-0 text-right">{activeStudent.identityNumber || 'Por registrar'}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 text-[11px]">
+                    <span className="text-slate-500 shrink-0">Curso:</span>
+                    <span className="font-semibold text-amber-700 truncate min-w-0 text-right" title={activeStudent.currentCourse || 'Sin curso asignado'}>{activeStudent.currentCourse || 'Sin curso asignado'}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 text-[11px]">
+                    <span className="text-slate-500 shrink-0">Saldo Pendiente:</span>
+                    <span className={`font-extrabold shrink-0 ${pendingBalance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                      L {pendingBalance.toLocaleString()}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-slate-500">DNI:</span>
-                  <span className="font-mono font-bold text-slate-800">{activeStudent.identityNumber || 'Por registrar'}</span>
-                </div>
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-slate-500">Curso:</span>
-                  <span className="font-semibold text-amber-700 truncate max-w-[140px]">{activeStudent.currentCourse || 'Sin curso asignado'}</span>
-                </div>
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-slate-500">Saldo Pendiente:</span>
-                  <span className={`font-extrabold ${pendingBalance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                    L {pendingBalance.toLocaleString()}
-                  </span>
-                </div>
-              </div>
 
-              {/* Quick Actions for this student */}
-              <div className="space-y-1.5">
-                {onOpenQuickEnrollmentForStudent && (
-                  <button
-                    onClick={() => onOpenQuickEnrollmentForStudent(activeStudent)}
-                    className="w-full py-2 px-3 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
-                  >
-                    <GraduationCap className="w-3.5 h-3.5" />
-                    <span>Nueva Matrícula</span>
-                  </button>
-                )}
-
-                {onOpenQuickPaymentForStudent && (
-                  <button
-                    onClick={() => onOpenQuickPaymentForStudent(activeStudent)}
-                    className="w-full py-2 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
-                  >
-                    <CreditCard className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Cobrar Saldo</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          ) : (
-            /* Conditional: If PROSPECTO -> Direct button to convert to student */
-            <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 text-center space-y-3">
-              <UserPlus className="w-6 h-6 mx-auto text-amber-600" />
-              <div>
-                <p className="font-bold text-amber-900 text-xs">Contacto Prospecto</p>
-                <p className="text-[11px] text-amber-800 mt-0.5">
-                  Identificado automáticamente como prospecto en la base de datos de Academia de Aduanas.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <button
-                  onClick={handleOpenConvertModal}
-                  className="w-full py-2 px-3 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-colors"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Completar Ficha de Estudiante</span>
-                </button>
-
-                <button
-                  onClick={handleQuickConvertToActive}
-                  disabled={isConvertingQuick}
-                  className="w-full py-1.5 px-3 rounded-lg bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 font-semibold text-[11px] flex items-center justify-center gap-1.5 cursor-pointer transition-colors disabled:opacity-50"
-                >
-                  {isConvertingQuick ? (
-                    <>
-                      <RotateCw className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
-                      <span>Aprobando como Estudiante...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Aprobar como Estudiante Activo</span>
-                    </>
+                {/* Quick Actions for this student */}
+                <div className="space-y-1.5">
+                  {onOpenQuickEnrollmentForStudent && (
+                    <button
+                      onClick={() => onOpenQuickEnrollmentForStudent(activeStudent)}
+                      className="w-full py-2 px-3 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+                    >
+                      <GraduationCap className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">Nueva Matrícula</span>
+                    </button>
                   )}
-                </button>
+
+                  {onOpenQuickPaymentForStudent && (
+                    <button
+                      onClick={() => onOpenQuickPaymentForStudent(activeStudent)}
+                      className="w-full py-2 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+                    >
+                      <CreditCard className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <span className="truncate">Cobrar Saldo</span>
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            ) : (
+              /* Conditional: If PROSPECTO -> Direct button to convert to student */
+              <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 text-center space-y-3">
+                <UserPlus className="w-6 h-6 mx-auto text-amber-600" />
+                <div>
+                  <p className="font-bold text-amber-900 text-xs">Contacto Prospecto</p>
+                  <p className="text-[11px] text-amber-800 mt-0.5">
+                    Identificado automáticamente como prospecto en la base de datos de Academia de Aduanas.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <button
+                    onClick={handleOpenConvertModal}
+                    className="w-full py-2 px-3 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Completar Ficha de Estudiante</span>
+                  </button>
+
+                  <button
+                    onClick={handleQuickConvertToActive}
+                    disabled={isConvertingQuick}
+                    className="w-full py-1.5 px-3 rounded-lg bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 font-semibold text-[11px] flex items-center justify-center gap-1.5 cursor-pointer transition-colors disabled:opacity-50"
+                  >
+                    {isConvertingQuick ? (
+                      <>
+                        <RotateCw className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
+                        <span>Aprobando como Estudiante...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Aprobar como Estudiante Activo</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+          </>
+        )}
       </div>
       )}
 

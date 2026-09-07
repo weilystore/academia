@@ -106,8 +106,8 @@ const MainAppLayout: React.FC = () => {
         />
 
         {/* Dynamic Viewport */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          <div className="max-w-7xl mx-auto">
+        <main className={`flex-1 overflow-y-auto ${currentView === 'whatsapp' ? 'p-2 sm:p-4 lg:p-5' : 'p-4 sm:p-6 lg:p-8'}`}>
+          <div className={currentView === 'whatsapp' ? 'w-full max-w-[1700px] mx-auto' : 'max-w-7xl mx-auto'}>
             {currentView === 'dashboard' && (
               <DashboardView
                 onNavigateTo={setCurrentView}
