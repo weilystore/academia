@@ -12,7 +12,6 @@ import {
   FolderLock,
   UserCheck,
   ShieldAlert,
-  Sparkles,
   Settings,
   ChevronDown,
   LogOut,
@@ -96,7 +95,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'documents', label: 'Documentos', icon: FolderLock, permission: 'students' },
     { id: 'users', label: 'Usuarios y Roles', icon: UserCheck, permission: 'users' },
     { id: 'audit', label: 'Auditoría', icon: ShieldAlert, permission: 'audit' },
-    { id: 'ai-assistant', label: 'Asistente IA (Gemini)', icon: Sparkles, badge: 'IA', badgeColor: 'bg-indigo-600', permission: 'dashboard' },
     { id: 'settings', label: 'Configuración', icon: Settings, permission: 'settings' }
   ];
 
